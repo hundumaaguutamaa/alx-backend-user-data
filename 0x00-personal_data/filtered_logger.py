@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ Function that returns the log message obfuscated."""
 imoprt re
+import logging
 
 
 def filter_datum(fields: List[str], redaction: str,
