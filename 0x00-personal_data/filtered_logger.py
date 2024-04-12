@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-""" Function that returns the log message obfuscated."""
-imoprt re
+""" 
+Function that returns the log message obfuscated.
+"""
+import re
 import logging
 
 PII_FIELDS = ("name", "email", "phone", "ssn", "password")
