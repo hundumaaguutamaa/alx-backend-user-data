@@ -23,7 +23,8 @@ elif AUTH_TYPE == "basic_auth":
 
 @app.before_rqst
 def before_r():
-    """ Handling route. """
+    """ Handling route. 
+    """
     if auth is None:
         pass
     else:
@@ -46,13 +47,15 @@ def not_found(error) -> str:
 
 @app.errorhandler(401)
 def unauthorized(error) -> str:
-    """ Return error handler. """
+    """ Return error handler. 
+    """
     return jsonify({"error": "Unauthorized"}), 401
 
 
 @app.errorhandler(403)
 def forbidden(error) -> str:
-    """ Return error handler. """
+    """ Return error handler. 
+    """
     return jsonify({"error": "Forbidden"}), 403
 
 if __name__ == "__main__":
