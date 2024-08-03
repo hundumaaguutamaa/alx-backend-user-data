@@ -5,7 +5,7 @@ import re
 import logging
 from typing import List, Tuple
 import mysql.connector
-from mysql.connector import connection
+from mysql.connector import connection, Error
 
 
 def filter_datum(fields: List[str], redaction: str, message: str, separator: str) -> str:
@@ -93,25 +93,27 @@ def get_db() -> connection.MySQLConnection:
     if db_name is None:
         raise ValueError("The environment variable PERSONAL_DATA_DB_NAME must be set.")
 
-    # Connect to the MySQL database
-    connection = mysql.connector.connect(
-        user=db_username,
-        password=db_password,
-        host=db_host,
-        database=db_name
-    )
-
-    return connection
+    try:
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(
+            user=db_username,
+            password=db_password,
+            host=db_host,
+            database=db_name
+        )
+        return connection
+    except Error as err:
+        raise RuntimeError(f"Error connecting to the database: {err}")
 
 
 def main():
     """
     Connects to the database, retrieves all rows from the users table, and displays each row under a filtered format.
     """
-    # Get database connection
-    db_connection = get_db()
-
     try:
+        # Get database connection
+        db_connection = get_db()
+
         cursor = db_connection.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users")
         rows = cursor.fetchall()
@@ -130,9 +132,12 @@ def main():
         for field in PII_FIELDS:
             print(field)
 
+    except Exception as e:
+        print(f"An error occurred: {e}")
     finally:
         # Ensure the database connection is closed
-        db_connection.close()
+        if db_connection.is_connected():
+            db_connection.close()
 
 
 if __name__ == "__main__":
