@@ -15,16 +15,17 @@ def filter_datum(fields: List[str], redaction: str, message: str, separator: str
     Args:
         fields (List[str]): List of strings representing all fields to obfuscate.
         redaction (str): String representing by what the field will be obfuscated.
-        message (str): String representing the log   
- line.
-        separator (str): String representing by which character is separating all fields   
- in the log line.
+        message (str): String representing the log line.
+        separator (str): String representing by which character is separating all fields in the log line.
 
     Returns:
         str: The log message with obfuscated field values.
     """
-    pattern = r'(?P<field>{})=[^{}]*'.format('|'.join(re.escape(field) for field in fields))
-    return re.sub(pattern, lambda m: f"{m.group('field')}={redaction}", message)
+    return re.sub(
+        r'({})=[^{}]*'.format('|'.join(re.escape(field) for field in fields), re.escape(separator)),
+        lambda m: m.group(0).split('=')[0] + '=' + redaction,
+        message
+    )
 
 
 class RedactingFormatter(logging.Formatter):
@@ -33,11 +34,11 @@ class RedactingFormatter(logging.Formatter):
     """
 
     REDACTION = "***"
+    FORMAT = "[HOLBERTON] %(name)s %(levelname)s %(asctime)-15s: %(message)s"
     SEPARATOR = ";"
 
-    def __init__(self,   
- fields: List[str]):
-        super().__init__()  # Use default format
+    def __init__(self, fields: List[str]):
+        super(RedactingFormatter, self).__init__(self.FORMAT)
         self.fields = fields
 
     def format(self, record: logging.LogRecord) -> str:
@@ -50,10 +51,12 @@ class RedactingFormatter(logging.Formatter):
         Returns:
             str: The formatted log message with redacted fields.
         """
-        original_message = logging.Formatter.format(self, record)
+        original_message = super().format(record)
         return filter_datum(self.fields, self.REDACTION, original_message, self.SEPARATOR)
 
+
 PII_FIELDS: Tuple[str, ...] = ("name", "email", "phone", "ssn", "password")
+
 
 def get_logger() -> logging.Logger:
     """
