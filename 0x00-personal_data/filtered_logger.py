@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+This module provides functionalities to connect to a secure Holberton database,
+filter sensitive information from log messages, and log the database records
+in a redacted format.
+"""
+
 import os
 import re
 import logging
@@ -30,7 +36,12 @@ def filter_datum(fields: List[str], redaction: str, message: str, separator: str
 
 class RedactingFormatter(logging.Formatter):
     """
-    Redacting Formatter class.
+    Redacting Formatter class for logging.
+
+    Attributes:
+        REDACTION (str): The redaction string to use for sensitive information.
+        FORMAT (str): The log format string.
+        SEPARATOR (str): The separator character for log fields.
     """
 
     REDACTION = "***"
@@ -38,6 +49,12 @@ class RedactingFormatter(logging.Formatter):
     SEPARATOR = ";"
 
     def __init__(self, fields: List[str]):
+        """
+        Initialize the formatter with fields to redact.
+
+        Args:
+            fields (List[str]): List of fields to redact in log messages.
+        """
         super(RedactingFormatter, self).__init__(self.FORMAT)
         self.fields = fields
 
@@ -106,7 +123,7 @@ def get_db() -> connection.MySQLConnection:
         raise RuntimeError(f"Error connecting to the database: {err}")
 
 
-def main():
+def main() -> None:
     """
     Connects to the database, retrieves all rows from the users table, and displays each row under a filtered format.
     """
