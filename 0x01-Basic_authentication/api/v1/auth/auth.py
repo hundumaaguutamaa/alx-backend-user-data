@@ -33,7 +33,12 @@ class Auth:
             path += '/'
 
         for excluded_path in excluded_paths:
-            if excluded_path.endswith('/') and path == excluded_path:
+            # Check for wildcard patterns
+            if excluded_path.endswith('*'):
+                pattern = excluded_path.rstrip('*')
+                if path.startswith(pattern):
+                    return False
+            elif path == excluded_path:
                 return False
 
         return True
