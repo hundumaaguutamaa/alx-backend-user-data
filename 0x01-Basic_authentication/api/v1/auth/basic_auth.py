@@ -9,7 +9,8 @@ import base64
 from api.v1.auth.auth import Auth
 from typing import TypeVar, Optional
 
-User = TypeVar('User')  # This should be replaced with the actual User class import if available
+# Define the User type variable; replace with actual User class import if available
+User = TypeVar('User')
 
 class BasicAuth(Auth):
     """
@@ -19,6 +20,7 @@ class BasicAuth(Auth):
     It includes methods to extract the Base64 encoded part of the authorization header,
     decode the Base64 string, extract user credentials, and find a User instance based on credentials.
     """
+
     def extract_base64_authorization_header(self, authorization_header: str) -> Optional[str]:
         """
         Extracts the Base64 part of the Authorization header for Basic Authentication.
@@ -27,7 +29,7 @@ class BasicAuth(Auth):
             authorization_header (str): The Authorization header string.
 
         Returns:
-            str: The Base64 encoded part of the header if valid, otherwise None.
+            Optional[str]: The Base64 encoded part of the header if valid, otherwise None.
         """
         if authorization_header is None:
             return None
@@ -45,7 +47,7 @@ class BasicAuth(Auth):
             base64_authorization_header (str): The Base64 encoded string.
 
         Returns:
-            str: The decoded UTF-8 string if valid, otherwise None.
+            Optional[str]: The decoded UTF-8 string if valid, otherwise None.
         """
         if base64_authorization_header is None:
             return None
@@ -74,6 +76,7 @@ class BasicAuth(Auth):
         if ':' not in decoded_base64_authorization_header:
             return None, None
         
+        # Split on the first ':' to ensure that the password can contain ':'
         email, password = decoded_base64_authorization_header.split(':', 1)
         return email, password
 
@@ -86,7 +89,7 @@ class BasicAuth(Auth):
             user_pwd (str): The user's password.
 
         Returns:
-            User: The User instance if credentials are valid, otherwise None.
+            Optional[User]: The User instance if credentials are valid, otherwise None.
         """
         if not isinstance(user_email, str) or user_email is None:
             return None
@@ -112,7 +115,7 @@ class BasicAuth(Auth):
             request: The request object containing the authorization header.
 
         Returns:
-            User: The User instance if credentials are valid, otherwise None.
+            Optional[User]: The User instance if credentials are valid, otherwise None.
         """
         if request is None:
             return None
@@ -134,3 +137,35 @@ class BasicAuth(Auth):
             return None
         
         return self.user_object_from_credentials(user_email, user_pwd)
+    
+    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
+        """
+        Determines if a given path requires authentication.
+
+        Args:
+            path (str): The path to check.
+            excluded_paths (List[str]): A list of paths that are excluded from authentication.
+
+        Returns:
+            bool: True if the path requires authentication, False otherwise.
+        """
+        if path is None:
+            return True
+
+        if excluded_paths is None or not excluded_paths:
+            return True
+
+        # Ensure the path ends with a slash for comparison
+        if not path.endswith('/'):
+            path += '/'
+
+        for excluded_path in excluded_paths:
+            # Check for wildcard patterns
+            if excluded_path.endswith('*'):
+                pattern = excluded_path.rstrip('*')
+                if path.startswith(pattern):
+                    return False
+            elif path == excluded_path:
+                return False
+
+        return True
