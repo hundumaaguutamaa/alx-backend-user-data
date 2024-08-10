@@ -11,6 +11,7 @@ from os import getenv
 from api.v1.views import app_views
 from flask import Flask, jsonify, abort, request
 from flask_cors import CORS
+import os
 
 app = Flask(__name__)
 app.register_blueprint(app_views)
@@ -29,9 +30,6 @@ if AUTH_TYPE:
     elif AUTH_TYPE == "auth":
         from api.v1.auth.auth import Auth
         auth = Auth()
-    elif AUTH_TYPE == "session_auth":
-        from api.v1.auth.session_auth import SessionAuth
-        auth = SessionAuth()
 
 @app.errorhandler(404)
 def not_found(error) -> str:
@@ -78,33 +76,29 @@ def before_request():
     Filters requests to handle authentication before processing the request.
     
     If authentication is required:
-    - Checks if the Authorization header or session cookie is present and valid.
+    - Checks if the Authorization header is present and valid.
     - Checks if the current user is authenticated.
     Raises:
-        401: If the Authorization header or session cookie is missing.
+        401: If the Authorization header is missing.
         403: If the current user is not authenticated.
     """
     if auth is None:
         return
 
-    # Set the current user in the request
-    setattr(request, "current_user", auth.current_user(request))
-
     # List of paths that do not require authentication
-    excluded_paths = [
-        '/api/v1/status/',
-        '/api/v1/unauthorized/',
-        '/api/v1/forbidden/',
-        '/api/v1/auth_session/login/'
-    ]
+    excluded_paths = ['/api/v1/status/', '/api/v1/unauthorized/', '/api/v1/forbidden/']
     
     # Check if the request path requires authentication
-    if auth.require_auth(request.path, excluded_paths):
-        cookie = auth.session_cookie(request)
-        if auth.authorization_header(request) is None and cookie is None:
-            abort(401)
-        if auth.current_user(request) is None:
-            abort(403)
+    if not auth.require_auth(request.path, excluded_paths):
+        return
+
+    # Check for the Authorization header
+    if auth.authorization_header(request) is None:
+        abort(401)
+
+    # Check the current user
+    if auth.current_user(request) is None:
+        abort(403)
 
 if __name__ == "__main__":
     host = getenv("API_HOST", "0.0.0.0")
