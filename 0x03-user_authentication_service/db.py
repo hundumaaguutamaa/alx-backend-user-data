@@ -3,12 +3,9 @@
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy.orm.exc import NoResultFound
-
-from user import Base, User
+from sqlalchemy.exc import InvalidRequestError, NoResultFound
+from models import Base, User
 
 class DB:
     """DB class for managing database operations.
