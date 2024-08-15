@@ -3,6 +3,7 @@
 This module defines the User model for the users table using SQLAlchemy.
 """
 
+
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -27,3 +28,4 @@ class User(Base):
     hashed_password = Column(String(128), nullable=False)
     session_id = Column(String(128), nullable=True)
     reset_token = Column(String(128), nullable=True)
+
