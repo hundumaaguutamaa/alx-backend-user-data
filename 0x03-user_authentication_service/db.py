@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""DB module
+"""DB module for interacting with the database using SQLAlchemy.
 """
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm.exc import NoResultFound
 
 from user import Base, User
 
 class DB:
-    """DB class
+    """DB class for managing database operations.
     """
 
     def __init__(self) -> None:
-        """Initialize a new DB instance."""
+        """Initialize a new DB instance with a SQLite database."""
         self._engine = create_engine("sqlite:///a.db", echo=True)
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
@@ -23,7 +23,11 @@ class DB:
 
     @property
     def _session(self) -> Session:
-        """Memoized session object."""
+        """Memoized session object.
+
+        Returns:
+            Session: SQLAlchemy session object.
+        """
         if self.__session is None:
             DBSession = sessionmaker(bind=self._engine)
             self.__session = DBSession()
@@ -33,7 +37,7 @@ class DB:
         """Add a new user to the database.
 
         Args:
-            email (str): The user's email.
+            email (str): The user's email address.
             hashed_password (str): The user's hashed password.
 
         Returns:
@@ -58,11 +62,11 @@ class DB:
             NoResultFound: If no matching user is found.
         """
         if not kwargs:
-            raise InvalidRequestError
-
+            raise InvalidRequestError("No arguments provided.")
+        
         user = self._session.query(User).filter_by(**kwargs).first()
-        if not user:
-            raise NoResultFound
+        if user is None:
+            raise NoResultFound("No user found with the provided filters.")
         return user
 
     def update_user(self, user_id: int, **kwargs) -> None:
@@ -82,4 +86,3 @@ class DB:
             setattr(user, key, value)
 
         self._session.commit()
-        return None
